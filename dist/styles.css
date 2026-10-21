@@ -1959,6 +1959,7 @@ input.seek-range:disabled::-webkit-slider-thumb {
   }
 }
 .drop-zone {
+  width:calc(100% - 24px);
   max-height:420px;
 }
 .field-hint,.section-description,.original-reminder {
@@ -1982,6 +1983,7 @@ input.seek-range:disabled::-webkit-slider-thumb {
     justify-content:flex-end;
   }
   .drop-zone {
+    width:calc(100% - 14px);
     max-height:none;
   }
 }
