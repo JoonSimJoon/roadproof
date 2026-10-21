@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#f2f4f7" />
+  <meta name="description" content="주행 영상에서 필요한 구간을 자르고 실제 촬영 날짜와 시간을 넣는 로컬 영상 편집기" />
+  <title>주행기록 — 신고 영상 편집기</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <svg class="icon-library" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+    <symbol id="icon-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="icon-upload" viewBox="0 0 24 24"><path d="M12 16V3m-5 5 5-5 5 5M4 15v5a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-5"/></symbol>
+    <symbol id="icon-film" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 3v18M17 3v18M3 8h4m-4 8h4M17 8h4m-4 8h4"/></symbol>
+    <symbol id="icon-play" viewBox="0 0 24 24"><path d="m9 5 11 7-11 7Z"/></symbol>
+    <symbol id="icon-back" viewBox="0 0 24 24"><path d="M5 5v14m13-14L8 12l10 7Z"/></symbol>
+    <symbol id="icon-forward" viewBox="0 0 24 24"><path d="M19 5v14M6 5l10 7L6 19Z"/></symbol>
+    <symbol id="icon-camera" viewBox="0 0 24 24"><path d="m8 5 1-2h6l1 2h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z"/><circle cx="12" cy="12" r="4"/></symbol>
+    <symbol id="icon-scissors" viewBox="0 0 24 24"><circle cx="5" cy="5" r="3"/><circle cx="5" cy="19" r="3"/><path d="m7 7 14 14M7 17 21 3"/></symbol>
+    <symbol id="icon-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+    <symbol id="icon-download" viewBox="0 0 24 24"><path d="M12 3v13m-5-5 5 5 5-5M4 16v4a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-4"/></symbol>
+    <symbol id="icon-shield" viewBox="0 0 24 24"><path d="m12 3 8 3v6c0 4-4 7-8 9-4-2-8-5-8-9V6Z"/><path d="m8 12 3 3 5-6"/></symbol>
+    <symbol id="icon-note" viewBox="0 0 24 24"><path d="M14 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-9M8 16l1-4L19 2l3 3-10 10Z"/></symbol>
+    <symbol id="icon-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="13" height="13" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/></symbol>
+    <symbol id="icon-close" viewBox="0 0 24 24"><path d="m6 6 12 12M6 18 18 6"/></symbol>
+  </svg>
+
+  <header class="app-header">
+    <a class="brand" href="./" aria-label="주행기록 처음 화면">
+      <svg class="brand-mark" viewBox="0 0 36 36" aria-hidden="true"><rect x="1" y="1" width="34" height="34" rx="10" fill="currentColor"/><path d="m11 8-3 20M25 8l3 20M18 8v4m0 4v4m0 4v4" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round"/></svg>
+      <span class="brand-name">주행기록</span><span class="brand-description">신고 영상 편집기</span>
+    </a>
+    <div class="header-actions">
+      <span class="privacy-status"><span class="status-dot"></span>영상은 이 기기 안에서만 처리됩니다</span>
+      <button type="button" class="button button-quiet" id="help-button">사용 방법</button>
+      <button type="button" class="button button-primary button-small" id="open-file-button"><svg class="icon"><use href="#icon-plus"/></svg>영상 열기</button>
+    </div>
+    <input type="file" id="file-input" accept="video/mp4,video/quicktime,video/webm,.m4v" hidden />
+  </header>
+
+  <main class="app-main">
+    <div class="page-intro">
+      <div><h1>필요한 순간만, 정확하게.</h1><p>주행 영상에서 신고할 구간을 고르고, 실제 촬영 시각을 넣어 저장하세요.</p></div>
+      <div class="workflow-hint" aria-label="편집 순서"><span><b>1</b> 영상 열기</span><i></i><span><b>2</b> 구간 선택</span><i></i><span><b>3</b> 저장</span></div>
+    </div>
+    <div id="error-banner" class="error-banner" role="alert" hidden></div>
+
+    <div class="workbench">
+      <div class="editor-left">
+        <section class="video-panel" aria-label="영상 미리보기">
+          <div class="video-heading"><div class="file-info"><svg class="icon"><use href="#icon-film"/></svg><span id="file-name">주행 영상</span><span id="file-meta">MP4 · MOV · WebM</span></div><span class="preview-label">미리보기</span></div>
+          <div id="drop-zone" class="drop-zone">
+            <div id="empty-state" class="empty-state">
+              <div class="upload-frame"><svg class="icon"><use href="#icon-upload"/></svg><span></span></div>
+              <h2>주행 영상을 끌어다 놓으세요</h2>
+              <p>블랙박스, 액션캠, 휴대폰으로 촬영한 영상</p>
+              <button type="button" class="button button-primary" id="choose-file"><svg class="icon"><use href="#icon-plus"/></svg>기기에서 영상 선택</button>
+              <button type="button" class="sample-button" id="demo-button"><svg class="icon"><use href="#icon-play"/></svg>샘플로 둘러보기</button>
+              <div class="empty-privacy"><svg class="icon"><use href="#icon-shield"/></svg>업로드 없이 내 기기에서 편집해요</div>
+            </div>
+            <div id="preview-area" class="preview-area" hidden>
+              <div id="video-viewport" class="video-viewport"><video id="video" playsinline preload="metadata"></video><div id="watermark-preview" class="watermark-preview"></div></div>
+              <span id="demo-badge" class="demo-badge" hidden>샘플 영상</span>
+            </div>
+          </div>
+          <div id="player-controls" class="player-controls">
+            <div class="play-controls">
+              <button type="button" class="icon-button" id="back-button" title="1초 이전 (←)" aria-label="1초 이전" disabled><svg class="icon"><use href="#icon-back"/></svg></button>
+              <button type="button" class="icon-button play-button" id="play-button" title="재생 / 일시 정지 (Space)" aria-label="재생" disabled><svg class="icon"><use href="#icon-play"/></svg></button>
+              <button type="button" class="icon-button" id="forward-button" title="1초 이후 (→)" aria-label="1초 이후" disabled><svg class="icon"><use href="#icon-forward"/></svg></button>
+              <span class="player-time"><span id="current-time">00:00.0</span><span class="time-divider">/</span><span id="total-time">00:00.0</span></span>
+            </div>
+            <div class="view-controls">
+              <select id="playback-rate" class="compact-select" aria-label="재생 속도" disabled><option value="0.25">0.25×</option><option value="0.5">0.5×</option><option value="1" selected>1× 속도</option><option value="1.5">1.5×</option><option value="2">2×</option></select>
+              <select id="zoom" class="compact-select" aria-label="미리보기 확대" disabled><option value="1">1× 확대</option><option value="1.5">1.5× 확대</option><option value="2">2× 확대</option><option value="3">3× 확대</option></select>
+              <button type="button" class="button button-quiet capture-button" id="snapshot-button" disabled><svg class="icon"><use href="#icon-camera"/></svg><span>장면 캡처</span></button>
+            </div>
+            <p id="zoom-label" class="zoom-label"></p>
+          </div>
+        </section>
+
+        <section id="timeline-panel" class="timeline-panel" aria-labelledby="timeline-title">
+          <div class="section-heading"><h2 id="timeline-title"><svg class="icon"><use href="#icon-scissors"/></svg>구간 자르기</h2><div class="clip-total">선택 구간 <strong id="clip-duration">00:00.0</strong></div></div>
+          <div class="timeline-track"><div id="timeline-thumbnails" class="timeline-thumbnails" aria-hidden="true"></div><input id="seek" class="seek-range" type="range" min="0" max="100" value="0" step="0.01" aria-label="영상 재생 위치" disabled /></div>
+          <div class="trim-sliders"><div><label for="trim-start-range">시작</label><input type="range" id="trim-start-range" min="0" max="100" step="0.1" value="0" disabled /></div><div><label for="trim-end-range">끝</label><input type="range" id="trim-end-range" min="0" max="100" step="0.1" value="100" disabled /></div></div>
+          <div class="trim-editor">
+            <div class="trim-field"><label for="trim-start-input">시작 시점</label><div><input type="text" id="trim-start-input" value="00:00.0" inputmode="decimal" aria-describedby="trim-time-hint" disabled /><button type="button" class="mark-button" id="mark-start" aria-label="현재 위치를 시작으로 지정 (I)" title="현재 위치를 시작으로 (I)" disabled>현재 위치 <kbd>I</kbd></button></div></div>
+            <span class="trim-arrow" aria-hidden="true">—</span>
+            <div class="trim-field"><label for="trim-end-input">종료 시점</label><div><input type="text" id="trim-end-input" value="00:00.0" inputmode="decimal" aria-describedby="trim-time-hint" disabled /><button type="button" class="mark-button" id="mark-end" aria-label="현재 위치를 끝으로 지정 (O)" title="현재 위치를 끝으로 (O)" disabled>현재 위치 <kbd>O</kbd></button></div></div>
+            <button type="button" class="button button-quiet reset-trim" id="reset-trim" disabled>전체 구간</button>
+          </div>
+          <span id="trim-time-hint" class="sr-only">분:초.소수 형식으로 입력하세요. 예: 01:23.5</span>
+          <div class="timeline-bottom"><div class="clip-presets"><span>현재 장면 전후</span><button type="button" data-clip-seconds="15" disabled>15초</button><button type="button" data-clip-seconds="30" disabled>30초</button><button type="button" data-clip-seconds="60" disabled>1분</button></div><p>상황의 앞뒤가 보이도록 여유 있게 선택하세요.</p></div>
+        </section>
+
+        <section id="memo-panel" class="memo-panel" aria-labelledby="memo-title">
+          <div class="section-heading"><h2 id="memo-title"><svg class="icon"><use href="#icon-note"/></svg>신고 메모</h2><span class="optional-label">선택 사항</span></div>
+          <p class="section-description">장소와 상황을 함께 적어두면 신고할 때 편리해요.</p>
+          <div class="memo-fields"><div class="field"><label for="incident-type">상황</label><select id="incident-type"><option value="">상황 선택</option><option>신호 위반</option><option>중앙선 침범</option><option>위협 운전</option><option>기타</option></select></div><div class="field"><label for="incident-location">발생 장소</label><input id="incident-location" type="text" placeholder="예: 서울시 종로구 세종대로, 광화문 방향" /></div></div>
+          <div class="field note-field"><label for="incident-note">상세 내용</label><textarea id="incident-note" rows="2" placeholder="차량 특징, 이동 방향, 영상에서 확인되는 상황을 적어주세요."></textarea></div>
+          <div class="memo-actions"><button type="button" class="button button-quiet" id="download-report"><svg class="icon"><use href="#icon-download"/></svg>메모 저장</button><button type="button" class="button button-secondary" id="copy-report"><svg class="icon"><use href="#icon-copy"/></svg>신고 메모 복사</button></div>
+        </section>
+        <p class="keyboard-hint"><span><kbd>Space</kbd> 재생 / 정지</span><span><kbd>←</kbd><kbd>→</kbd> 1초 이동</span><span><kbd>I</kbd> 시작 <kbd>O</kbd> 끝</span></p>
+      </div>
+
+      <aside id="settings" class="settings-panel" aria-label="영상 저장 설정">
+        <section class="watermark-settings" aria-labelledby="watermark-title">
+          <div class="section-heading"><h2 id="watermark-title"><svg class="icon"><use href="#icon-clock"/></svg>날짜·시간 워터마크</h2><label class="switch" title="날짜·시간 워터마크 사용"><input type="checkbox" id="watermark-enabled" checked aria-label="날짜·시간 워터마크 사용" /><span></span></label></div>
+          <p class="section-description">영상에 촬영 시각을 표시합니다.</p>
+          <div class="timestamp-example" aria-hidden="true"><span class="timestamp-dot"></span><span>2026-10-21&nbsp; 14:32:08</span><span class="timestamp-caption">표시 예시</span></div>
+          <div class="field"><label for="recording-date">영상 시작 날짜</label><input type="date" id="recording-date" /></div>
+          <div class="field recording-time-field"><label for="recording-time">영상 시작 시각 <span>한국 시간</span></label><input type="time" id="recording-time" step="1" /></div>
+          <p class="field-hint">원본 영상 <strong>00:00</strong>의 실제 촬영 시각을 입력하세요.</p>
+          <label class="check-row confirm-time"><input type="checkbox" id="time-confirmed" /><span>실제 촬영 시각을 확인했어요</span></label>
+          <div class="settings-divider"></div>
+          <div class="watermark-options"><div class="field"><label for="position">표시 위치</label><select id="position"><option value="bottom-left" selected>왼쪽 아래</option><option value="bottom-right">오른쪽 아래</option><option value="top-left">왼쪽 위</option><option value="top-right">오른쪽 위</option></select></div><div class="field"><label for="watermark-color">글자 색상</label><select id="watermark-color"><option value="white" selected>흰색</option><option value="yellow">노란색</option></select></div></div>
+          <div class="field font-size-field"><label for="font-size">글자 크기 <output id="font-size-value" for="font-size">32</output></label><input type="range" id="font-size" min="20" max="64" step="1" value="32" /></div>
+          <label class="check-row"><input type="checkbox" id="watermark-background" checked /><span>글자 뒤에 반투명 배경 넣기</span></label>
+        </section>
+        <section class="export-settings" aria-labelledby="export-title">
+          <h2 id="export-title"><svg class="icon"><use href="#icon-download"/></svg>저장 설정</h2>
+          <div class="field quality-field"><label for="quality">영상 화질</label><select id="quality"><option value="high">원본 해상도 · 고화질</option><option value="medium" selected>최대 1080p · 균형</option><option value="small">최대 720p · 작은 용량</option></select></div>
+          <label class="check-row"><input type="checkbox" id="mute" /><span>소리 제외</span></label>
+          <div class="export-summary" id="export-summary">영상을 열면 저장할 구간이 표시됩니다.</div>
+          <button type="button" class="button button-primary export-button" id="export-button" disabled><svg class="icon"><use href="#icon-download"/></svg>MP4로 저장</button>
+          <div id="export-progress-section" class="export-progress-section" hidden><progress id="export-progress" max="100" value="0" aria-label="영상 저장 진행률"></progress><div><span id="export-status" role="status">저장 준비 중…</span><button type="button" id="cancel-export" class="text-button">취소</button></div></div>
+          <a id="download-result" class="download-result" hidden>완성한 영상 다운로드</a>
+          <p class="original-reminder"><svg class="icon"><use href="#icon-shield"/></svg>원본 파일은 그대로 보관하세요.</p>
+        </section>
+      </aside>
+    </div>
+    <footer class="app-footer"><span>기록은 정확하게, 편집은 간단하게.</span><span>주행기록</span></footer>
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+  <dialog id="help-dialog" class="help-dialog" aria-labelledby="help-title">
+    <div class="dialog-heading"><h2 id="help-title">주행기록 사용 방법</h2><button type="button" class="icon-button" id="close-help" aria-label="사용 방법 닫기"><svg class="icon"><use href="#icon-close"/></svg></button></div>
+    <ol class="help-steps"><li><strong>기기에서 영상을 열어주세요.</strong><p>MP4, MOV, WebM 파일을 선택하거나 편집 화면으로 끌어다 놓으세요. 영상은 서버에 업로드하지 않습니다.</p></li><li><strong>필요한 구간을 선택하세요.</strong><p>영상을 재생하며 시작 위치에서 <kbd>I</kbd>, 종료 위치에서 <kbd>O</kbd>를 누르세요. 시간 입력이나 슬라이더로 세밀하게 조절할 수 있어요.</p></li><li><strong>원본 영상의 촬영 시각을 확인하세요.</strong><p>날짜·시간에는 자르기 전 원본 영상의 00:00 시점에 해당하는 실제 한국 시각을 입력하세요. 표시되는 시각은 영상의 재생 위치에 따라 증가합니다.</p></li><li><strong>영상을 저장하세요.</strong><p>화질과 소리 포함 여부를 정한 다음 MP4로 저장하세요. 신고 메모도 따로 복사하거나 저장할 수 있어요.</p></li></ol>
+    <div class="help-note"><strong>편집 전 확인해주세요</strong><p>브라우저가 지원하는 영상 코덱에 따라 열기와 저장 가능 여부가 달라집니다. 최신 Chrome 또는 Edge를 권장합니다. Safari에서는 일부 영상의 열기나 저장이 제한될 수 있습니다. 원본 영상은 보관하고, 실제 촬영 시각을 확인한 뒤 워터마크를 넣어주세요.</p></div>
+  </dialog>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
