@@ -122,6 +122,7 @@
           <button type="button" class="button button-primary export-button" id="export-button" disabled><svg class="icon"><use href="#icon-download"/></svg>MP4로 저장</button>
           <div id="export-progress-section" class="export-progress-section" hidden><progress id="export-progress" max="100" value="0" aria-label="영상 저장 진행률"></progress><div><span id="export-status" role="status">저장 준비 중…</span><button type="button" id="cancel-export" class="text-button">취소</button></div></div>
           <a id="download-result" class="download-result" hidden>완성한 영상 다운로드</a>
+          <a id="report-next" class="report-next" href="#report-handoff" hidden>다음: 신고 메모와 접수처 확인</a>
           <p class="original-reminder"><svg class="icon"><use href="#icon-shield"/></svg>원본 파일은 그대로 보관하세요.</p>
         </section>
       </aside>
@@ -129,8 +130,17 @@
           <div class="section-heading"><h2 id="memo-title"><svg class="icon"><use href="#icon-note"/></svg>신고 메모</h2><span class="optional-label">선택 사항</span></div>
           <p class="section-description">장소와 상황을 함께 적어두면 신고할 때 편리해요.</p>
           <div class="memo-fields"><div class="field"><label for="incident-type">상황</label><select id="incident-type"><option value="">상황 선택</option><option>신호 위반</option><option>중앙선 침범</option><option>위협 운전</option><option>기타</option></select></div><div class="field"><label for="incident-location">발생 장소</label><input id="incident-location" type="text" placeholder="예: 서울시 종로구 세종대로, 광화문 방향" /></div></div>
+          <div class="field note-field vehicle-field"><label for="incident-vehicle">차량번호 (선택)</label><input id="incident-vehicle" type="text" maxlength="30" placeholder="영상에서 확인되는 번호만 입력" /></div>
           <div class="field note-field"><label for="incident-note">상세 내용</label><textarea id="incident-note" rows="2" placeholder="차량 특징, 이동 방향, 영상에서 확인되는 상황을 적어주세요."></textarea></div>
           <div class="memo-actions"><button type="button" class="button button-quiet" id="download-report"><svg class="icon"><use href="#icon-download"/></svg>메모 저장</button><button type="button" class="button button-secondary" id="copy-report"><svg class="icon"><use href="#icon-copy"/></svg>신고 메모 복사</button></div>
+          <section id="report-handoff" class="report-handoff" aria-labelledby="report-handoff-title">
+            <div class="report-handoff-heading"><div><h3 id="report-handoff-title">안전신문고로 신고 이어가기</h3><p>자동차·교통위반 신고</p></div><a class="official-guide" href="https://m.korea.kr/news/policyNewsView.do?newsId=148928494" target="_blank" rel="noopener noreferrer" referrerpolicy="no-referrer">공식 신고 안내<span class="sr-only"> (새 탭)</span></a></div>
+            <ol class="report-steps"><li>편집한 MP4를 기기에 저장</li><li>신고 메모를 복사</li><li>안전신문고에서 영상 첨부 후 접수</li></ol>
+            <p id="report-handoff-status" class="report-handoff-status" role="status">MP4를 저장한 뒤 신고 메모와 함께 준비하세요.</p>
+            <div class="report-handoff-actions"><button type="button" class="button button-secondary" id="copy-report-handoff"><svg class="icon"><use href="#icon-copy"/></svg>신고 메모 복사</button><a id="report-site-link" class="button button-primary" href="https://www.safetyreport.go.kr/#safereport/safereport3" target="_blank" rel="noopener noreferrer" referrerpolicy="no-referrer" aria-describedby="report-new-tab">안전신문고에서 신고하기<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6m0-6L10 14M10 4H5a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-5"/></svg></a></div>
+            <p id="report-new-tab" class="report-new-tab">자동차·교통위반 신고 화면이 새 탭에서 열립니다.</p>
+            <p class="report-handoff-note">영상과 메모는 자동 전송되지 않아요. 첨부와 최종 접수는 안전신문고에서 진행하세요.</p>
+          </section>
         </section>
         <p class="keyboard-hint"><span><kbd>Space</kbd> 재생 / 정지</span><span><kbd>←</kbd><kbd>→</kbd> 1초 이동</span><span><kbd>Shift</kbd> + 방향키 0.1초</span><span><kbd>I</kbd> 시작 <kbd>O</kbd> 끝</span></p>
 
@@ -142,7 +152,7 @@
   <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
   <dialog id="help-dialog" class="help-dialog" aria-labelledby="help-title">
     <div class="dialog-heading"><h2 id="help-title">joon법정신 사용 방법</h2><button type="button" class="icon-button" id="close-help" aria-label="사용 방법 닫기"><svg class="icon"><use href="#icon-close"/></svg></button></div>
-    <ol class="help-steps"><li><strong>기기에서 영상을 열어주세요.</strong><p>MP4, MOV, WebM 파일을 선택하거나 편집 화면으로 끌어다 놓으세요. 영상은 서버에 업로드하지 않습니다.</p></li><li><strong>필요한 구간을 선택하세요.</strong><p>영상을 재생하며 시작 위치에서 <kbd>I</kbd>, 종료 위치에서 <kbd>O</kbd>를 누르세요. 시간 입력이나 슬라이더로 세밀하게 조절할 수 있어요. <kbd>Shift</kbd> + <kbd>←</kbd> / <kbd>→</kbd>로 0.1초씩 이동할 수 있습니다.</p></li><li><strong>원본 영상의 촬영 시각을 확인하세요.</strong><p>날짜·시간에는 자르기 전 원본 영상의 00:00 시점에 해당하는 실제 한국 시각을 입력하세요. 표시되는 시각은 영상의 재생 위치에 따라 증가합니다.</p></li><li><strong>영상을 저장하세요.</strong><p>화질과 소리 포함 여부를 정한 다음 MP4로 저장하세요. 신고 메모도 따로 복사하거나 저장할 수 있어요.</p></li></ol>
+    <ol class="help-steps"><li><strong>기기에서 영상을 열어주세요.</strong><p>MP4, MOV, WebM 파일을 선택하거나 편집 화면으로 끌어다 놓으세요. 영상은 서버에 업로드하지 않습니다.</p></li><li><strong>필요한 구간을 선택하세요.</strong><p>영상을 재생하며 시작 위치에서 <kbd>I</kbd>, 종료 위치에서 <kbd>O</kbd>를 누르세요. 시간 입력이나 슬라이더로 세밀하게 조절할 수 있어요. <kbd>Shift</kbd> + <kbd>←</kbd> / <kbd>→</kbd>로 0.1초씩 이동할 수 있습니다.</p></li><li><strong>원본 영상의 촬영 시각을 확인하세요.</strong><p>날짜·시간에는 자르기 전 원본 영상의 00:00 시점에 해당하는 실제 한국 시각을 입력하세요. 표시되는 시각은 영상의 재생 위치에 따라 증가합니다.</p></li><li><strong>영상을 저장하세요.</strong><p>화질과 소리 포함 여부를 정한 다음 MP4로 저장하세요. 신고 메모도 따로 복사하거나 저장할 수 있어요.</p></li><li><strong>안전신문고에서 신고를 이어가세요.</strong><p>저장한 MP4와 신고 메모를 준비한 뒤, 메모 아래의 안전신문고 링크를 여세요. 영상 첨부와 최종 접수는 공식 사이트에서 직접 진행합니다.</p></li></ol>
     <div class="help-note"><strong>편집 전 확인해주세요</strong><p>브라우저가 지원하는 영상 코덱에 따라 열기와 저장 가능 여부가 달라집니다. 최신 Chrome 또는 Edge를 권장합니다. Safari에서는 일부 영상의 열기나 저장이 제한될 수 있습니다. 원본 영상은 보관하고, 실제 촬영 시각을 확인한 뒤 워터마크를 넣어주세요.</p></div>
   </dialog>
   <script type="module" src="./app.js"></script>

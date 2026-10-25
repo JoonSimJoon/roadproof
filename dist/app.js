@@ -70,7 +70,17 @@ function updateReadiness() {
   $(state.file ? ready ? 'step-save' : 'step-trim' : 'step-file').setAttribute('aria-current', 'step');
   for (const id of ['recording-date', 'recording-time', 'time-confirmed', 'position', 'watermark-color', 'font-size', 'watermark-background']) $(id).disabled = state.busy || !options.watermarkEnabled;
   $('mute').disabled = state.busy || !state.info?.hasAudio;
+  updateReportHandoff();
   updateTimestampExample();
+}
+
+function updateReportHandoff() {
+  const ready = !!state.resultUrl;
+  $('report-next').hidden = !ready;
+  $('report-handoff-status').dataset.state = ready ? 'ready' : 'pending';
+  $('report-handoff-status').textContent = ready
+    ? `${$('download-result').download} 준비 완료. 기기에 저장된 파일을 확인한 뒤 메모를 복사하세요.`
+    : 'MP4를 저장한 뒤 신고 메모와 함께 준비하세요. 이미 가진 영상으로도 신고 사이트를 열 수 있어요.';
 }
 
 function updateTimestampExample() {
@@ -379,6 +389,7 @@ function clearResult() {
   $('download-result').hidden = true;
   $('download-result').removeAttribute('href');
   if (!state.abort) $('export-progress-section').hidden = true;
+  updateReportHandoff();
 }
 
 $('snapshot-button').addEventListener('click', async () => {
@@ -451,6 +462,7 @@ function reportText() {
     state.demo ? '[샘플 영상 — 실제 신고 자료가 아닙니다]' : '',
     `유형: ${$('incident-type').value || '미입력'}`,
     `장소: ${$('incident-location').value.trim() || '미입력'}`,
+    `차량번호: ${$('incident-vehicle').value.trim() || '미입력'}`,
     `내용: ${$('incident-note').value.trim() || '미입력'}`,
     '',
     `원본 파일: ${state.file?.name || '미선택'}`,
@@ -463,10 +475,15 @@ function reportText() {
     '이 메모의 시각은 사용자가 입력한 값입니다. 원본 영상과 실제 상황을 함께 확인하세요.',
   ].filter((line, index, array) => line || (index > 0 && array[index - 1])).join('\n');
 }
-$('copy-report').addEventListener('click', async () => {
+async function copyReport() {
+  clearError();
+  clearTimeout(toastTimer);
+  $('toast').hidden = true;
   try { await navigator.clipboard.writeText(reportText()); notify('신고 메모를 복사했습니다.'); }
   catch { showError('클립보드 권한이 없습니다. 메모 저장 버튼으로 텍스트 파일을 저장해주세요.'); }
-});
+}
+$('copy-report').addEventListener('click', copyReport);
+$('copy-report-handoff').addEventListener('click', copyReport);
 $('download-report').addEventListener('click', () => { saveBlob(new Blob(['\uFEFF' + reportText()], { type: 'text/plain;charset=utf-8' }), 'joon법정신_신고메모.txt'); });
 $('help-button').addEventListener('click', () => $('help-dialog').showModal());
 $('close-help').addEventListener('click', () => $('help-dialog').close());

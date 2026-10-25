@@ -235,6 +235,24 @@ select { appearance: none; -webkit-appearance: none; padding-right: 32px; backgr
 .note-field { margin-top: 14px; }
 .memo-actions { display: flex; justify-content: flex-end; gap: 7px; margin-top: 12px; }
 .memo-actions .button { font-size: 13px; }
+.report-next { display: block; min-height: 44px; margin-top: 6px; padding: 11px 3px; color: var(--blue); text-align: center; text-underline-offset: 3px; font-size: 13px; }
+.vehicle-field { max-width: 380px; }
+.report-handoff { margin-top: 23px; padding-top: 22px; border-top: 1px solid var(--line); }
+.report-handoff-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.report-handoff-heading h3 { margin: 0; font-size: 16px; letter-spacing: -.4px; line-height: 1.5; }
+.report-handoff-heading p { margin: 4px 0 0; color: #6c7d95; font-size: 13px; }
+.official-guide { flex-shrink: 0; min-height: 44px; padding-block: 3px 12px; color: #657b98; font-size: 12px; text-underline-offset: 3px; }
+.report-steps { display: grid; grid-template-columns: 1fr .8fr 1.25fr; gap: 18px; list-style: none; counter-reset: report-step; margin: 20px 0 17px; padding: 0; }
+.report-steps li { display: flex; align-items: flex-start; gap: 8px; color: #526b8b; font-size: 13px; line-height: 1.65; word-break: keep-all; }
+.report-steps li::before { content: counter(report-step); counter-increment: report-step; display: grid; place-items: center; width: 21px; height: 21px; margin-top: 1px; flex-shrink: 0; border-radius: 50%; background: #eef3fb; color: #5c7ba6; font-size: 11px; font-weight: 650; }
+.report-handoff-status { margin: 0 0 15px; color: #526d91; background: #f2f6fc; border-radius: 6px; padding: 11px 13px; font-size: 13px; line-height: 1.65; overflow-wrap: anywhere; }
+.report-handoff-status[data-state="ready"] { color: #3f745d; background: #eff7f3; }
+.report-handoff-actions { display: flex; justify-content: flex-end; gap: 9px; flex-wrap: wrap; }
+.report-handoff-actions .button { font-size: 13px; }
+.report-handoff-actions .icon { width: 16px; height: 16px; }
+.report-new-tab { margin: 7px 0 0; color: #73869f; font-size: 12px; text-align: right; }
+.report-handoff-note { margin: 15px 0 0; color: #70829a; font-size: 12px; line-height: 1.8; word-break: keep-all; }
+
 .app-footer { display: flex; justify-content: space-between; align-items: center; gap: 20px; padding-top: 18px; margin-top: 28px; border-top: 1px solid #dde4ee; color: #75849a; font-size: 12px; }
 .app-footer strong { color: #5d718d; font-size: 14px; letter-spacing: -.5px; margin-right: 9px; }
 .error-banner { margin-bottom: 18px; padding: 13px 17px; border: 1px solid #edc9c2; border-radius: 7px; background: #fff4f1; color: #9b4638; font-size: 14px; white-space: pre-line; }
@@ -366,6 +384,17 @@ select { appearance: none; -webkit-appearance: none; padding-right: 32px; backgr
   .export-button { min-height: 50px; font-size: 16px; }
   .memo-fields { grid-template-columns: 1fr; gap: 14px; }
   .memo-actions .button { padding-inline: 10px; font-size: 13px; }
+  .vehicle-field { max-width: none; }
+  .report-handoff-heading { gap: 8px; flex-wrap: wrap; }
+  .official-guide { min-height: 44px; padding-block: 9px; }
+  .report-steps { grid-template-columns: 1fr; gap: 12px; margin-top: 14px; }
+  .report-steps li { font-size: 14px; }
+  .report-handoff-status { font-size: 14px; }
+  .report-handoff-actions { flex-direction: column; }
+  .report-handoff-actions .button { width: 100%; min-height: 46px; font-size: 14px; }
+  .report-new-tab { text-align: center; }
+  .report-handoff-note { font-size: 13px; }
+
   .app-footer { display: block; text-align: center; font-size: 11px; margin-top: 24px; padding-top: 17px; }
   .app-footer > span { display: block; }
   .app-footer > span + span { margin-top: 5px; }
