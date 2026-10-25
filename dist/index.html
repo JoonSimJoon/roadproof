@@ -5,10 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#f2f4f7" />
   <meta name="description" content="주행 영상에서 필요한 구간을 자르고 실제 촬영 날짜와 시간을 넣는 로컬 영상 편집기" />
-  <title>주행기록 — 신고 영상 편집기</title>
+  <title>joon법정신 — 주행 영상 편집기</title>
+  <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
   <link rel="stylesheet" href="./styles.css" />
 </head>
 <body>
+  <a class="skip-link" href="#drop-zone">영상 편집기로 건너뛰기</a>
   <svg class="icon-library" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
     <symbol id="icon-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
     <symbol id="icon-upload" viewBox="0 0 24 24"><path d="M12 16V3m-5 5 5-5 5 5M4 15v5a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-5"/></symbol>
@@ -27,9 +29,9 @@
   </svg>
 
   <header class="app-header">
-    <a class="brand" href="./" aria-label="주행기록 처음 화면">
-      <svg class="brand-mark" viewBox="0 0 36 36" aria-hidden="true"><rect x="1" y="1" width="34" height="34" rx="10" fill="currentColor"/><path d="m11 8-3 20M25 8l3 20M18 8v4m0 4v4m0 4v4" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round"/></svg>
-      <span class="brand-name">주행기록</span><span class="brand-description">신고 영상 편집기</span>
+    <a class="brand" href="./" aria-label="joon법정신 처음 화면">
+      <svg class="brand-mark" viewBox="0 0 40 40" aria-hidden="true"><rect width="40" height="40" rx="11" fill="currentColor"/><path d="M24 15v11a7 7 0 0 1-14 0" fill="none" stroke="white" stroke-width="4" stroke-linecap="round"/><path d="M24 7v2" stroke="#ecae52" stroke-width="4" stroke-linecap="round"/><path d="M31 16v5m0 5v5" stroke="white" stroke-opacity=".38" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <span class="brand-name">joon법정신</span><span class="brand-description">신고 영상 편집기</span>
     </a>
     <div class="header-actions">
       <span class="privacy-status"><span class="status-dot"></span>영상은 이 기기 안에서만 처리됩니다</span>
@@ -41,16 +43,16 @@
 
   <main class="app-main">
     <div class="page-intro">
-      <div><h1>필요한 순간만, 정확하게.</h1><p>주행 영상에서 신고할 구간을 고르고, 실제 촬영 시각을 넣어 저장하세요.</p></div>
-      <div class="workflow-hint" aria-label="편집 순서"><span><b>1</b> 영상 열기</span><i></i><span><b>2</b> 구간 선택</span><i></i><span><b>3</b> 저장</span></div>
+      <div><h1>주행의 기록, 신고의 근거.</h1><p>필요한 구간을 자르고, 촬영 시각을 담아 저장하세요.</p></div>
+      <nav class="workflow-nav" aria-label="편집 단계"><a id="step-file" href="#drop-zone" data-state="current"><b>1</b><span>영상 열기</span></a><span class="step-connector" aria-hidden="true"></span><a id="step-trim" href="#timeline-panel" data-state="pending"><b>2</b><span>구간 선택</span></a><span class="step-connector" aria-hidden="true"></span><a id="step-save" href="#settings" data-state="pending"><b>3</b><span>시각·저장</span></a></nav>
     </div>
     <div id="error-banner" class="error-banner" role="alert" hidden></div>
 
     <div class="workbench">
-      <div class="editor-left">
+
         <section class="video-panel" aria-label="영상 미리보기">
           <div class="video-heading"><div class="file-info"><svg class="icon"><use href="#icon-film"/></svg><span id="file-name">주행 영상</span><span id="file-meta">MP4 · MOV · WebM</span></div><span class="preview-label">미리보기</span></div>
-          <div id="drop-zone" class="drop-zone">
+          <div id="drop-zone" class="drop-zone" tabindex="-1">
             <div id="empty-state" class="empty-state">
               <div class="upload-frame"><svg class="icon"><use href="#icon-upload"/></svg><span></span></div>
               <h2>주행 영상을 끌어다 놓으세요</h2>
@@ -64,6 +66,7 @@
               <span id="demo-badge" class="demo-badge" hidden>샘플 영상</span>
             </div>
           </div>
+          <p id="load-status" class="load-status" role="status" hidden></p>
           <div id="player-controls" class="player-controls">
             <div class="play-controls">
               <button type="button" class="icon-button" id="back-button" title="1초 이전 (←)" aria-label="1초 이전" disabled><svg class="icon"><use href="#icon-back"/></svg></button>
@@ -86,29 +89,20 @@
           <div class="trim-sliders"><div><label for="trim-start-range">시작</label><input type="range" id="trim-start-range" min="0" max="100" step="0.1" value="0" disabled /></div><div><label for="trim-end-range">끝</label><input type="range" id="trim-end-range" min="0" max="100" step="0.1" value="100" disabled /></div></div>
           <div class="trim-editor">
             <div class="trim-field"><label for="trim-start-input">시작 시점</label><div><input type="text" id="trim-start-input" value="00:00.0" inputmode="decimal" aria-describedby="trim-time-hint" disabled /><button type="button" class="mark-button" id="mark-start" aria-label="현재 위치를 시작으로 지정 (I)" title="현재 위치를 시작으로 (I)" disabled>현재 위치 <kbd>I</kbd></button></div></div>
-            <span class="trim-arrow" aria-hidden="true">—</span>
+            <span class="trim-arrow" aria-hidden="true">→</span>
             <div class="trim-field"><label for="trim-end-input">종료 시점</label><div><input type="text" id="trim-end-input" value="00:00.0" inputmode="decimal" aria-describedby="trim-time-hint" disabled /><button type="button" class="mark-button" id="mark-end" aria-label="현재 위치를 끝으로 지정 (O)" title="현재 위치를 끝으로 (O)" disabled>현재 위치 <kbd>O</kbd></button></div></div>
             <button type="button" class="button button-quiet reset-trim" id="reset-trim" disabled>전체 구간</button>
           </div>
           <span id="trim-time-hint" class="sr-only">분:초.소수 형식으로 입력하세요. 예: 01:23.5</span>
-          <div class="timeline-bottom"><div class="clip-presets"><span>현재 장면 전후</span><button type="button" data-clip-seconds="15" disabled>15초</button><button type="button" data-clip-seconds="30" disabled>30초</button><button type="button" data-clip-seconds="60" disabled>1분</button></div><p>상황의 앞뒤가 보이도록 여유 있게 선택하세요.</p></div>
+          <div class="timeline-bottom"><div class="clip-presets"><span>현재 장면 전후</span><button type="button" data-clip-seconds="15" disabled>15초</button><button type="button" data-clip-seconds="30" disabled>30초</button><button type="button" data-clip-seconds="60" disabled>1분</button></div><button type="button" class="button button-secondary" id="preview-clip" disabled><svg class="icon"><use href="#icon-play"/></svg>선택 구간 재생</button></div>
+          <p class="timeline-tip">상황의 앞뒤가 보이도록 여유 있게 선택하세요.</p>
         </section>
-
-        <section id="memo-panel" class="memo-panel" aria-labelledby="memo-title">
-          <div class="section-heading"><h2 id="memo-title"><svg class="icon"><use href="#icon-note"/></svg>신고 메모</h2><span class="optional-label">선택 사항</span></div>
-          <p class="section-description">장소와 상황을 함께 적어두면 신고할 때 편리해요.</p>
-          <div class="memo-fields"><div class="field"><label for="incident-type">상황</label><select id="incident-type"><option value="">상황 선택</option><option>신호 위반</option><option>중앙선 침범</option><option>위협 운전</option><option>기타</option></select></div><div class="field"><label for="incident-location">발생 장소</label><input id="incident-location" type="text" placeholder="예: 서울시 종로구 세종대로, 광화문 방향" /></div></div>
-          <div class="field note-field"><label for="incident-note">상세 내용</label><textarea id="incident-note" rows="2" placeholder="차량 특징, 이동 방향, 영상에서 확인되는 상황을 적어주세요."></textarea></div>
-          <div class="memo-actions"><button type="button" class="button button-quiet" id="download-report"><svg class="icon"><use href="#icon-download"/></svg>메모 저장</button><button type="button" class="button button-secondary" id="copy-report"><svg class="icon"><use href="#icon-copy"/></svg>신고 메모 복사</button></div>
-        </section>
-        <p class="keyboard-hint"><span><kbd>Space</kbd> 재생 / 정지</span><span><kbd>←</kbd><kbd>→</kbd> 1초 이동</span><span><kbd>I</kbd> 시작 <kbd>O</kbd> 끝</span></p>
-      </div>
 
       <aside id="settings" class="settings-panel" aria-label="영상 저장 설정">
         <section class="watermark-settings" aria-labelledby="watermark-title">
           <div class="section-heading"><h2 id="watermark-title"><svg class="icon"><use href="#icon-clock"/></svg>날짜·시간 워터마크</h2><label class="switch" title="날짜·시간 워터마크 사용"><input type="checkbox" id="watermark-enabled" checked aria-label="날짜·시간 워터마크 사용" /><span></span></label></div>
           <p class="section-description">영상에 촬영 시각을 표시합니다.</p>
-          <div class="timestamp-example" aria-hidden="true"><span class="timestamp-dot"></span><span>2026-10-21&nbsp; 14:32:08</span><span class="timestamp-caption">표시 예시</span></div>
+          <div class="timestamp-example"><span id="timestamp-example-label" class="timestamp-caption">현재 장면에 표시될 시각</span><div><span class="timestamp-dot"></span><span id="timestamp-example-value">촬영 시각을 입력하세요</span></div></div>
           <div class="field"><label for="recording-date">영상 시작 날짜</label><input type="date" id="recording-date" /></div>
           <div class="field recording-time-field"><label for="recording-time">영상 시작 시각 <span>한국 시간</span></label><input type="time" id="recording-time" step="1" /></div>
           <p class="field-hint">원본 영상 <strong>00:00</strong>의 실제 촬영 시각을 입력하세요.</p>
@@ -122,6 +116,7 @@
           <h2 id="export-title"><svg class="icon"><use href="#icon-download"/></svg>저장 설정</h2>
           <div class="field quality-field"><label for="quality">영상 화질</label><select id="quality"><option value="high">원본 해상도 · 고화질</option><option value="medium" selected>최대 1080p · 균형</option><option value="small">최대 720p · 작은 용량</option></select></div>
           <label class="check-row"><input type="checkbox" id="mute" /><span>소리 제외</span></label>
+          <div id="export-readiness" class="export-readiness" role="status" data-state="waiting">영상을 열고 저장할 구간을 선택하세요.</div>
           <div class="export-summary" id="export-summary">영상을 열면 저장할 구간이 표시됩니다.</div>
           <button type="button" class="button button-primary export-button" id="export-button" disabled><svg class="icon"><use href="#icon-download"/></svg>MP4로 저장</button>
           <div id="export-progress-section" class="export-progress-section" hidden><progress id="export-progress" max="100" value="0" aria-label="영상 저장 진행률"></progress><div><span id="export-status" role="status">저장 준비 중…</span><button type="button" id="cancel-export" class="text-button">취소</button></div></div>
@@ -129,14 +124,24 @@
           <p class="original-reminder"><svg class="icon"><use href="#icon-shield"/></svg>원본 파일은 그대로 보관하세요.</p>
         </section>
       </aside>
+        <section id="memo-panel" class="memo-panel" aria-labelledby="memo-title">
+          <div class="section-heading"><h2 id="memo-title"><svg class="icon"><use href="#icon-note"/></svg>신고 메모</h2><span class="optional-label">선택 사항</span></div>
+          <p class="section-description">장소와 상황을 함께 적어두면 신고할 때 편리해요.</p>
+          <div class="memo-fields"><div class="field"><label for="incident-type">상황</label><select id="incident-type"><option value="">상황 선택</option><option>신호 위반</option><option>중앙선 침범</option><option>위협 운전</option><option>기타</option></select></div><div class="field"><label for="incident-location">발생 장소</label><input id="incident-location" type="text" placeholder="예: 서울시 종로구 세종대로, 광화문 방향" /></div></div>
+          <div class="field note-field"><label for="incident-note">상세 내용</label><textarea id="incident-note" rows="2" placeholder="차량 특징, 이동 방향, 영상에서 확인되는 상황을 적어주세요."></textarea></div>
+          <div class="memo-actions"><button type="button" class="button button-quiet" id="download-report"><svg class="icon"><use href="#icon-download"/></svg>메모 저장</button><button type="button" class="button button-secondary" id="copy-report"><svg class="icon"><use href="#icon-copy"/></svg>신고 메모 복사</button></div>
+        </section>
+        <p class="keyboard-hint"><span><kbd>Space</kbd> 재생 / 정지</span><span><kbd>←</kbd><kbd>→</kbd> 1초 이동</span><span><kbd>Shift</kbd> + 방향키 0.1초</span><span><kbd>I</kbd> 시작 <kbd>O</kbd> 끝</span></p>
+
+
     </div>
-    <footer class="app-footer"><span>기록은 정확하게, 편집은 간단하게.</span><span>주행기록</span></footer>
+    <footer class="app-footer"><span>영상은 이 기기 안에서만 처리됩니다.</span><span><strong>joon법정신</strong> 심준의 준법정신</span></footer>
   </main>
 
   <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
   <dialog id="help-dialog" class="help-dialog" aria-labelledby="help-title">
-    <div class="dialog-heading"><h2 id="help-title">주행기록 사용 방법</h2><button type="button" class="icon-button" id="close-help" aria-label="사용 방법 닫기"><svg class="icon"><use href="#icon-close"/></svg></button></div>
-    <ol class="help-steps"><li><strong>기기에서 영상을 열어주세요.</strong><p>MP4, MOV, WebM 파일을 선택하거나 편집 화면으로 끌어다 놓으세요. 영상은 서버에 업로드하지 않습니다.</p></li><li><strong>필요한 구간을 선택하세요.</strong><p>영상을 재생하며 시작 위치에서 <kbd>I</kbd>, 종료 위치에서 <kbd>O</kbd>를 누르세요. 시간 입력이나 슬라이더로 세밀하게 조절할 수 있어요.</p></li><li><strong>원본 영상의 촬영 시각을 확인하세요.</strong><p>날짜·시간에는 자르기 전 원본 영상의 00:00 시점에 해당하는 실제 한국 시각을 입력하세요. 표시되는 시각은 영상의 재생 위치에 따라 증가합니다.</p></li><li><strong>영상을 저장하세요.</strong><p>화질과 소리 포함 여부를 정한 다음 MP4로 저장하세요. 신고 메모도 따로 복사하거나 저장할 수 있어요.</p></li></ol>
+    <div class="dialog-heading"><h2 id="help-title">joon법정신 사용 방법</h2><button type="button" class="icon-button" id="close-help" aria-label="사용 방법 닫기"><svg class="icon"><use href="#icon-close"/></svg></button></div>
+    <ol class="help-steps"><li><strong>기기에서 영상을 열어주세요.</strong><p>MP4, MOV, WebM 파일을 선택하거나 편집 화면으로 끌어다 놓으세요. 영상은 서버에 업로드하지 않습니다.</p></li><li><strong>필요한 구간을 선택하세요.</strong><p>영상을 재생하며 시작 위치에서 <kbd>I</kbd>, 종료 위치에서 <kbd>O</kbd>를 누르세요. 시간 입력이나 슬라이더로 세밀하게 조절할 수 있어요. <kbd>Shift</kbd> + <kbd>←</kbd> / <kbd>→</kbd>로 0.1초씩 이동할 수 있습니다.</p></li><li><strong>원본 영상의 촬영 시각을 확인하세요.</strong><p>날짜·시간에는 자르기 전 원본 영상의 00:00 시점에 해당하는 실제 한국 시각을 입력하세요. 표시되는 시각은 영상의 재생 위치에 따라 증가합니다.</p></li><li><strong>영상을 저장하세요.</strong><p>화질과 소리 포함 여부를 정한 다음 MP4로 저장하세요. 신고 메모도 따로 복사하거나 저장할 수 있어요.</p></li></ol>
     <div class="help-note"><strong>편집 전 확인해주세요</strong><p>브라우저가 지원하는 영상 코덱에 따라 열기와 저장 가능 여부가 달라집니다. 최신 Chrome 또는 Edge를 권장합니다. Safari에서는 일부 영상의 열기나 저장이 제한될 수 있습니다. 원본 영상은 보관하고, 실제 촬영 시각을 확인한 뒤 워터마크를 넣어주세요.</p></div>
   </dialog>
   <script type="module" src="./app.js"></script>

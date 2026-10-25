@@ -42,20 +42,58 @@ function notify(message) {
 function showError(error) {
   $('error-banner').textContent = error instanceof Error ? error.message : String(error);
   $('error-banner').hidden = false;
+  $('error-banner').scrollIntoView({ block: 'nearest', behavior: 'instant' });
 }
 
 function clearError() { $('error-banner').hidden = true; }
 
-function setBusy(busy) {
+function updateReadiness() {
+  const options = settings();
+  const validDate = validRecordingTime(options.baseDateTime);
+  const ready = !!state.file && (!options.watermarkEnabled || (validDate && $('time-confirmed').checked));
+  let text = '영상을 열면 편집을 시작할 수 있어요.';
+  if (state.busy) text = state.abort ? 'MP4를 만들고 있어요. 이 화면을 열어두세요.' : '영상을 준비하고 있어요.';
+  else if (state.file) {
+    if (options.watermarkEnabled && !validDate) text = '원본이 시작된 실제 촬영 날짜와 시간을 입력하세요.';
+    else if (!ready) text = '입력한 시각을 확인하고 확인란을 체크하세요.';
+    else if (state.resultUrl) text = '저장 완료. 아래에서 완성된 영상을 다시 받을 수 있어요.';
+    else text = options.watermarkEnabled ? '준비 완료. 선택한 구간에 촬영 시각을 넣어 저장합니다.' : '준비 완료. 날짜·시간 표시 없이 저장합니다.';
+  }
+  $('export-readiness').textContent = text;
+  $('export-readiness').dataset.state = state.busy ? 'busy' : ready ? 'ready' : 'pending';
+  const steps = [state.file ? 'done' : 'current', state.file ? 'current' : 'pending', state.resultUrl ? 'done' : ready ? 'current' : 'pending'];
+  if (ready) steps[1] = 'done';
+  for (const [index, id] of ['step-file', 'step-trim', 'step-save'].entries()) {
+    $(id).dataset.state = steps[index];
+    $(id).removeAttribute('aria-current');
+  }
+  $(state.file ? ready ? 'step-save' : 'step-trim' : 'step-file').setAttribute('aria-current', 'step');
+  for (const id of ['recording-date', 'recording-time', 'time-confirmed', 'position', 'watermark-color', 'font-size', 'watermark-background']) $(id).disabled = state.busy || !options.watermarkEnabled;
+  $('mute').disabled = state.busy || !state.info?.hasAudio;
+  updateTimestampExample();
+}
+
+function updateTimestampExample() {
+  const options = settings();
+  const valid = validRecordingTime(options.baseDateTime);
+  $('timestamp-example-value').textContent = !options.watermarkEnabled ? '날짜·시간 표시 꺼짐' : valid ? formatRecordingTime(options.baseDateTime, state.file ? video.currentTime : 0) : '촬영 시각을 입력해주세요';
+  $('timestamp-example-label').textContent = options.watermarkEnabled && valid ? '현재 장면의 표시 시각 · 한국 시간' : '원본 영상 00:00을 기준으로 계산해요';
+}
+
+function setBusy(busy, message = '영상을 준비하고 있습니다…') {
   state.busy = busy;
   for (const input of document.querySelectorAll('#settings input, #settings select, #timeline-panel input, #timeline-panel button, #player-controls button, #player-controls select')) input.disabled = busy || (!state.file && !input.closest('#settings'));
   for (const id of ['open-file-button', 'choose-file', 'demo-button', 'export-button', 'snapshot-button']) $(id).disabled = busy || ((!state.file) && ['export-button', 'snapshot-button'].includes(id));
   $('cancel-export').disabled = false;
   $('export-button').textContent = busy ? '처리 중…' : 'MP4로 저장';
   $('drop-zone').setAttribute('aria-busy', String(busy));
+  $('load-status').hidden = !busy || !!state.abort;
+  $('load-status').textContent = message;
+  updateReadiness();
 }
 
 function drawPreview() {
+  if (state.busy && !state.abort) return;
   if (!state.file || !video.videoWidth) return;
   if (overlay.width !== video.videoWidth || overlay.height !== video.videoHeight) {
     overlay.width = video.videoWidth;
@@ -69,6 +107,8 @@ function drawPreview() {
   $('current-time').textContent = formatTime(video.currentTime, true);
   $('seek').value = String(video.currentTime);
   $('timeline-panel').style.setProperty('--playhead', `${video.currentTime / state.info.duration * 100}%`);
+  $('seek').setAttribute('aria-valuetext', formatTime(video.currentTime, true));
+  updateTimestampExample();
 }
 
 function animate() {
@@ -87,6 +127,8 @@ function renderRange() {
   $('timeline-panel').style.setProperty('--trim-start', `${state.start / duration * 100}%`);
   $('timeline-panel').style.setProperty('--trim-end', `${state.end / duration * 100}%`);
   $('export-summary').textContent = `${formatTime(state.start, true)} – ${formatTime(state.end, true)} / ${formatTime(state.end - state.start, true)} 분량`;
+  $('trim-start-range').setAttribute('aria-valuetext', formatTime(state.start, true));
+  $('trim-end-range').setAttribute('aria-valuetext', formatTime(state.end, true));
 }
 
 function setRange(start, end, seekTo) {
@@ -94,7 +136,9 @@ function setRange(start, end, seekTo) {
   const minimum = Math.min(0.1, state.info.duration);
   state.start = clamp(start, 0, state.info.duration - minimum);
   state.end = clamp(end, state.start + minimum, state.info.duration);
+  clearResult();
   renderRange();
+  updateReadiness();
   if (seekTo !== undefined) seek(seekTo);
 }
 
@@ -184,10 +228,10 @@ async function createThumbnails(url, duration, id) {
 async function loadFile(file, demo = false) {
   if (!file || state.busy) return;
   clearError();
-  if (!/\.(mp4|m4v|mov|webm)$/i.test(file.name) && !file.type.startsWith('video/')) { showError('MP4, MOV 또는 WebM 영상 파일을 선택해주세요.'); return; }
+  if (!/\.(mp4|m4v|mov|webm)$/i.test(file.name) && !file.type.startsWith('video/')) { showError('MP4, MOV 또는 WebM 영상 파일을 선택해주세요.'); $('file-input').value = ''; return; }
   const id = ++state.loadId;
   video.pause();
-  setBusy(true);
+  setBusy(true, `${file.name} 읽는 중…`);
   notify('영상을 읽고 있습니다. 파일은 업로드되지 않습니다.');
   let url;
   try {
@@ -217,16 +261,20 @@ async function loadFile(file, demo = false) {
     $('timeline-thumbnails').replaceChildren();
     for (const name of ['seek', 'trim-start-range', 'trim-end-range']) { $(name).max = String(info.duration); $(name).step = '0.01'; }
     renderRange();
-    drawPreview();
     clearResult();
     notify(demo ? '직접 만든 샘플 영상입니다. 구간과 워터마크를 바꿔 저장해보세요.' : '영상을 열었습니다. 원본의 실제 촬영 시작 시각을 입력해주세요.');
     void createThumbnails(url, info.duration, id);
   } catch (error) {
     if (url) URL.revokeObjectURL(url);
-    if (state.url) video.src = state.url;
+    if (state.url && video.src !== state.url) {
+      const restored = waitForMedia(video, 'loadeddata');
+      video.src = state.url;
+      await restored.catch(() => {});
+    } else if (!state.url) { video.removeAttribute('src'); video.load(); }
     showError(error);
   } finally {
     setBusy(false);
+    drawPreview();
     $('file-input').value = '';
   }
 }
@@ -242,7 +290,7 @@ $('drop-zone').addEventListener('drop', event => { event.preventDefault(); dragD
 
 $('demo-button').addEventListener('click', async () => {
   clearError();
-  setBusy(true);
+  setBusy(true, '편집 연습용 샘플을 만들고 있습니다…');
   $('demo-button').textContent = '샘플 영상 준비 중…';
   try {
     const file = await makeDemoFile();
@@ -253,6 +301,12 @@ $('demo-button').addEventListener('click', async () => {
 });
 
 $('play-button').addEventListener('click', togglePlay);
+$('preview-clip').addEventListener('click', async () => {
+  if (!state.file || state.busy) return;
+  video.pause();
+  seek(state.start);
+  await togglePlay();
+});
 $('back-button').addEventListener('click', () => seek(video.currentTime - 1));
 $('forward-button').addEventListener('click', () => seek(video.currentTime + 1));
 $('seek').addEventListener('input', event => seek(Number(event.target.value)));
@@ -289,6 +343,9 @@ for (const button of document.querySelectorAll('[data-clip-seconds]')) button.ad
 for (const input of document.querySelectorAll('#settings input, #settings select')) input.addEventListener('input', () => {
   if (input.id === 'recording-date' || input.id === 'recording-time') $('time-confirmed').checked = false;
   $('font-size-value').textContent = `${$('font-size').value}`;
+  clearResult();
+  clearError();
+  updateReadiness();
   drawPreview();
 });
 
@@ -321,6 +378,7 @@ function clearResult() {
   state.resultUrl = null;
   $('download-result').hidden = true;
   $('download-result').removeAttribute('href');
+  if (!state.abort) $('export-progress-section').hidden = true;
 }
 
 $('snapshot-button').addEventListener('click', async () => {
@@ -329,6 +387,7 @@ $('snapshot-button').addEventListener('click', async () => {
   try {
     const options = validateTimestamp();
     video.pause();
+    if (video.seeking) await waitForMedia(video, 'seeked');
     const blob = await exportFrame(video, options);
     saveBlob(blob, downloadName(state.file.name, video.currentTime, video.currentTime, 'png'));
     notify('현재 장면을 원본 해상도의 PNG로 저장했습니다.');
@@ -341,9 +400,9 @@ $('export-button').addEventListener('click', async () => {
   let options;
   try { options = validateTimestamp(); } catch (error) { showError(error); return; }
   video.pause();
-  setBusy(true);
   clearResult();
   state.abort = new AbortController();
+  setBusy(true);
   $('export-progress-section').hidden = false;
   $('cancel-export').hidden = false;
   $('export-progress').value = 0;
@@ -388,7 +447,7 @@ function reportText() {
   const options = settings();
   const validDate = validRecordingTime(options.baseDateTime);
   return [
-    '주행 영상 신고 메모',
+    'joon법정신 · 주행 영상 신고 메모',
     state.demo ? '[샘플 영상 — 실제 신고 자료가 아닙니다]' : '',
     `유형: ${$('incident-type').value || '미입력'}`,
     `장소: ${$('incident-location').value.trim() || '미입력'}`,
@@ -408,7 +467,7 @@ $('copy-report').addEventListener('click', async () => {
   try { await navigator.clipboard.writeText(reportText()); notify('신고 메모를 복사했습니다.'); }
   catch { showError('클립보드 권한이 없습니다. 메모 저장 버튼으로 텍스트 파일을 저장해주세요.'); }
 });
-$('download-report').addEventListener('click', () => { saveBlob(new Blob(['\uFEFF' + reportText()], { type: 'text/plain;charset=utf-8' }), '주행기록_신고메모.txt'); });
+$('download-report').addEventListener('click', () => { saveBlob(new Blob(['\uFEFF' + reportText()], { type: 'text/plain;charset=utf-8' }), 'joon법정신_신고메모.txt'); });
 $('help-button').addEventListener('click', () => $('help-dialog').showModal());
 $('close-help').addEventListener('click', () => $('help-dialog').close());
 $('help-dialog').addEventListener('click', event => { if (event.target === $('help-dialog')) { const r = event.target.getBoundingClientRect(); if (event.clientX < r.left || event.clientX > r.right || event.clientY < r.top || event.clientY > r.bottom) event.target.close(); } });
