@@ -243,7 +243,7 @@ function drawDemoFrame(ctx, width, height, time) {
   ctx.fillStyle = '#1b2426';
   ctx.beginPath(); ctx.ellipse(width * 0.5, height * 1.09, width * 0.4, height * 0.2, 0, 0, Math.PI * 2); ctx.fill();
   ctx.fillStyle = 'rgba(20, 30, 34, .76)'; ctx.fillRect(24, 24, 315, 70);
-  ctx.fillStyle = '#fff'; ctx.font = '600 22px sans-serif'; ctx.fillText('ROADPROOF · SAMPLE', 42, 53);
+  ctx.fillStyle = '#fff'; ctx.font = '600 22px sans-serif'; ctx.fillText('joon법정신 · SAMPLE', 42, 53);
   ctx.font = '15px sans-serif'; ctx.fillText('편집 연습용 영상 · 실제 촬영 아님', 42, 78);
 }
 
