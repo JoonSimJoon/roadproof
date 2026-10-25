@@ -85,8 +85,9 @@
 
         <section id="timeline-panel" class="timeline-panel" aria-labelledby="timeline-title">
           <div class="section-heading"><h2 id="timeline-title"><svg class="icon"><use href="#icon-scissors"/></svg>구간 자르기</h2><div class="clip-total">선택 구간 <strong id="clip-duration">00:00.0</strong></div></div>
-          <div class="timeline-track"><div id="timeline-thumbnails" class="timeline-thumbnails" aria-hidden="true"></div><input id="seek" class="seek-range" type="range" min="0" max="100" value="0" step="0.01" aria-label="영상 재생 위치" disabled /></div>
-          <div class="trim-sliders"><div><label for="trim-start-range">시작</label><input type="range" id="trim-start-range" min="0" max="100" step="0.1" value="0" disabled /></div><div><label for="trim-end-range">끝</label><input type="range" id="trim-end-range" min="0" max="100" step="0.1" value="100" disabled /></div></div>
+          <div class="trim-slider trim-slider-start"><label for="trim-start-range">시작 지점</label><input type="range" id="trim-start-range" min="0" max="100" step="0.1" value="0" disabled /></div>
+          <div class="timeline-track"><div class="timeline-axis"><div id="timeline-thumbnails" class="timeline-thumbnails" aria-hidden="true"></div></div><input id="seek" class="seek-range" type="range" min="0" max="100" value="0" step="0.01" aria-label="영상 재생 위치" disabled /></div>
+          <div class="trim-slider trim-slider-end"><label for="trim-end-range">종료 지점</label><input type="range" id="trim-end-range" min="0" max="100" step="0.1" value="100" disabled /></div>
           <div class="trim-editor">
             <div class="trim-field"><label for="trim-start-input">시작 시점</label><div><input type="text" id="trim-start-input" value="00:00.0" inputmode="decimal" aria-describedby="trim-time-hint" disabled /><button type="button" class="mark-button" id="mark-start" aria-label="현재 위치를 시작으로 지정 (I)" title="현재 위치를 시작으로 (I)" disabled>현재 위치 <kbd>I</kbd></button></div></div>
             <span class="trim-arrow" aria-hidden="true">→</span>
